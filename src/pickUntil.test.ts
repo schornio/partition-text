@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { pickUntilFromEnd, pickUntilFromStart } from './pickUntil';
+import { pickUntilFromEnd, pickUntilFromStart } from './pickUntil.js';
 
 describe('pickUntil', () => {
   test('pick tokens until the limit is reached', () => {

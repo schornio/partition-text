@@ -1,4 +1,4 @@
-import { pickUntilFromEnd, pickUntilFromStart } from './pickUntil';
+import { pickUntilFromEnd, pickUntilFromStart } from './pickUntil.js';
 
 const TOKENS_PER_PARTITION_DEFAULT = 1000;
 

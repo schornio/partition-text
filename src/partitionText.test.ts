@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { partitionText } from './partitionText';
+import { partitionText } from './partitionText.js';
 
 function createPartition(
   arr: [string | undefined, string, string | undefined][],
