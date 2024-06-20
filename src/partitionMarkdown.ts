@@ -56,7 +56,11 @@ function getContentSize(
   calculateTokenAmount: (data: string) => number,
 ) {
   const markdown = toMarkdown(content, { extensions: [gfmTableToMarkdown()] });
-  return calculateTokenAmount(markdown);
+  const text = markdown.replaceAll(/\W+/gu, ' ').trim();
+  if (text.length === 0) {
+    return 0;
+  }
+  return calculateTokenAmount(text);
 }
 
 function partitionMarkdownTable(
@@ -174,8 +178,17 @@ export function partitionMarkdown(
 
   let currentChunk: RootContent[] = [];
   let currentContentSize = 0;
+
+  let latestContentIsHeading = false;
+
   for (const content of astChildren) {
+    latestContentIsHeading = false;
+
     const contentSize = getContentSize(content, calculateTokenAmount);
+
+    if (contentSize === 0) {
+      continue;
+    }
 
     if (currentContentSize + contentSize > tokensPerPartition) {
       if (currentChunk.length > 0) {
@@ -201,12 +214,16 @@ export function partitionMarkdown(
     }
 
     if (content.type === 'heading') {
-      // console.log('Adding heading', content);
+      latestContentIsHeading = true;
       topic.add(content);
     } else {
       currentChunk.push(content);
       currentContentSize += contentSize;
     }
+  }
+
+  if (latestContentIsHeading) {
+    chunks.push([...topic.getHeaders()]);
   }
 
   if (currentChunk.length > 0) {

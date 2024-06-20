@@ -40,6 +40,43 @@ describe('partitionMarkdown', () => {
     expect(result).toEqual(expected);
   });
 
+  test('should handle tailing headers', () => {
+    const text =
+      '# Lorem\n\nDolor sit amet, consectetur adipiscing elit.\n\n## Heading2';
+    const chunkLength = 2;
+
+    const expected = [
+      '# Lorem\n\nDolor sit\n',
+      '# Lorem\n\namet, consectetur\n',
+      '# Lorem\n\nadipiscing elit.\n',
+      '# Lorem\n\n## Heading2\n',
+    ];
+
+    const result = partitionMarkdown(
+      text,
+      (data: string) => data.split(' ').length,
+      { tokensPerPartition: chunkLength },
+    );
+
+    expect(result).toEqual(expected);
+  });
+
+  test('should ignore empty chunks', () => {
+    const text = '# Lorem\n\nipsum dolor\n>\nsit amet.';
+    const chunkLength = 2;
+
+    const result = partitionMarkdown(
+      text,
+      (data: string) => data.split(' ').length,
+      { tokensPerPartition: chunkLength },
+    );
+
+    expect(result).toEqual([
+      '# Lorem\n\nipsum dolor\n',
+      '# Lorem\n\nsit amet.\n',
+    ]);
+  });
+
   test('should partition within a too long table', () => {
     const text = `
 | Header 1 | Header 2 | Header 3 |
@@ -49,10 +86,31 @@ describe('partitionMarkdown', () => {
 | Row 3    | Row 3    | Row 3    |
 | Row 4    | Row 4    | Row 4    |
     `;
-    const chunkLength =
-      '| Row 1    | Row 1    | Row 1    | | Row 2    | Row 2    | Row 2    |'.split(
-        /\s+/gu,
-      ).length;
+    const chunkLength = 12;
+
+    const expected = [
+      '| Header 1 | Header 2 | Header 3 |\n| -------- | -------- | -------- |\n| Row 1    | Row 1    | Row 1    |\n| Row 2    | Row 2    | Row 2    |\n',
+      '| Header 1 | Header 2 | Header 3 |\n| -------- | -------- | -------- |\n| Row 3    | Row 3    | Row 3    |\n| Row 4    | Row 4    | Row 4    |\n',
+    ];
+
+    const result = partitionMarkdown(
+      text,
+      (data: string) => data.split(' ').length,
+      { tokensPerPartition: chunkLength },
+    );
+
+    expect(result).toEqual(expected);
+  });
+  test('should partition within a too long table and ignore empty rows', () => {
+    const text = `
+| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Row 1    | Row 1    | Row 1    |
+| Row 2    | Row 2    | Row 2    |
+| Row 3    | Row 3    | Row 3    |
+| Row 4    | Row 4    | Row 4    |
+    `;
+    const chunkLength = 12;
 
     const expected = [
       '| Header 1 | Header 2 | Header 3 |\n| -------- | -------- | -------- |\n| Row 1    | Row 1    | Row 1    |\n| Row 2    | Row 2    | Row 2    |\n',
